@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram-Like Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: hsl(60, 23%, 97%);
+        }
+
+        header {
+            background-color: hsl(59, 98%, 49%);
+            padding: 10px 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: hsl(0, 0%, 15%);
+        }
+
+        nav {
+            margin: 10px 0;
+        }
+
+        nav a {
+            text-decoration: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            color: #262626;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            display: inline-block;
+        }
+
+        nav a:hover {
+            color: #0095f6;
+        }
+
+        .section {
+            display: none;
+            padding: 2px;
+            max-width: 800px;
+            margin: 2px auto;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 5px;
+        }
+
+        .gallery img {
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery img:hover {
+            transform: scale(1.05);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-image {
+            max-width: 98%;
+            max-height: 100%;
+            border-radius: 2px;
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 30px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 50px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .left {
+            left: 10px;
+        }
+
+        .right {
+            right: 10px;
+        }
+
+        footer {
+            background-color: #333;
+            color: #FFFFFF;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .main-card {
+            background-color: #050505;
+            padding: 2px;
+            color: #FFFFFF;
+            
+            text-align: center;
+            box-shadow: 0 2px 5px hwb(0 100% 0%);
+            margin-bottom: 20px;
+        }
+
+        #emoji-container {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .emoji {
+            font-size: 2rem;
+            animation: floatUp 3s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh);
+                opacity: 0;
+            }
+        }
+        /* Circular Progress Bar Styles */
+#progress-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f3e305;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 999;
+}
+
+#circular-progress {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+#circular-progress svg {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    transform: rotate(-90deg);
+}
+
+#circular-progress circle {
+    fill: none;
+    stroke-width: 8;
+    stroke: hsl(56, 94%, 51%);
+}
+
+#progress-circle {
+    stroke: #4caf50;
+    stroke-dasharray: 220; /* 2 * PI * r */
+    stroke-dashoffset: 220;
+    transition: stroke-dashoffset 0.3s ease;
+}
+
+#progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: #4caf50;
+}
+
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>URBANMEMES</h1>
+        <nav>
+            <a onclick="showSection('home')">ARCHIVES</a>
+            <a onclick="showSection('about')">NEW</a>
+            <a onclick="showSection('contact')">CONTACT US</a>
+            <a onclick="showSection('contacts')">downloadOfflineApp</a>
+             
+        
+        </nav>
+    </header>
+
+    <main>
+        <!-- Home Section -->
+        <div class="section active" id="home">
+            <div class="gallery" id="gallery"></div>
+
+             <!-- Modal for image view -->
+             <div class="modal" id="modal">
+                <span class="close" id="close">&times;</span>
+                <img class="modal-image" id="modal-image" src="" alt="">
+                <div class="arrow left" id="prev">&larr;</div>
+                <div class="arrow right" id="next">&rarr;</div>
+            </div>
+
+            <div id="progress-container">
+                <div id="circular-progress">
+                    <svg>
+                        <circle cx="40" cy="40" r="35"></circle>
+                        <circle id="progress-circle" cx="40" cy="40" r="35"></circle>
+                    </svg>
+                    <div id="progress-percentage">0%</div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- About Section -->
+        <div class="section" id="about">
+            <div class="main-card">
+                <h2>NEW TRENDINGS</h2>
+                <hr>
+                <p style="margin-bottom: 40px;">Nikikosea i will always apologize,i have zero pride when it comes to taking accountability.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Kitambo nilikua nafikiria watu hawakulangi supper ni maskini😅</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Mamako anaeza shinda mamangu kufanya Alilili...🤔😅🤣.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Ile usingizi iliniharibia masomo ndio inataka kuniharibia kazi💔💔.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">"!-Itabidi tumtafutie msichana mwengine juu mimi nakutaka " is the mother of all the pickup lines.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Unameza dawa ya panya badala ukufe unamea mkia.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Unaamka usiku kususu eye contact kidogo na ndoo ya unga ushaeka maji ya ugali😅.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Kuna mtu anadhani sasa eti next year ndio itajipa, my friend wembe ni ule ule.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">High school kuna kitu ilikua inaitwa cloze test,hio nilikua nauma mbili ama ikienda sana moja</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Huwa nafurahia sana mkiniona mjinga.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">Life is so short so break your silly egos,forgive quickly,believe slowly,love truly,laugh loudly and never avoid anything that makes you smile❤️.</p>
+                <hr>
+                <p style="margin-bottom: 40px;">There is this immeasurable joy that comes from knowing that you are progressing ,no matter how little it is.</p>
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="section" id="contact">
+            <h2>CONTACT US AT: urbanmemes254@gmail.com</h2>
+        </div>
+         <div class="section" id="contacts">
+            <h2>click the  link to download downloadOfflineApp </h2>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 URBANMEMES Website. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // JavaScript to handle section navigation
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+                if (section.id === sectionId) {
+                    section.classList.add('active');
+                }
+            });
+        }
+
+        // JavaScript for the gallery
+        document.addEventListener("DOMContentLoaded", () => {
+            const gallery = document.getElementById('gallery');
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modal-image');
+            const closeModal = document.getElementById('close');
+            const nextButton = document.getElementById('next');
+            const prevButton = document.getElementById('prev');
+
+            const images = [
+                'https://storage.googleapis.com/nyasimemes/nov/016155f93b1d4ae0b3077ef736527b8e.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/093476061e454e4ab7715a6c57d59b7f.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/195a92cee7f04cc2b1f29b563ecb53a4.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/1a7ca25545cf4e169907ebfcc8faf4f2.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/1ce014c23448465e87ca04e61a62e928.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/2b050564a6fd4d54bd02a2b672d8f3d5.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/2e0f9774edc24b22a96fce5f2ad457a5.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/35c58d6fdf2b4a84bddc3efcbe32a091.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/39b718b2108041e7a22d9caf39a940cd.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/4e45f7e3327b443681eb5f9597e41ce7.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/602973b50aee4a88ae5885498d1ada15.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/7a6a906c0a764b109dc4cba15841646e.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/7c88579a7b6e425ebaf2c01fd10e0f04.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/8d047c0280004fce87b3f400ab4e744a.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/ca85171d3a2b4a65a3f26cb5ab64e6b6.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/dffd1dd7811245b68787e7ec963e68fa.jpg',
+                'https://storage.googleapis.com/nyasimemes/nov/dffd1dd7811245b68787e7ec963e68fa.jpg'
+            ];
+
+            let currentIndex = 0;
+
+            images.forEach((src, index) => {
+                const imgElement = document.createElement('img');
+                imgElement.src = src;
+                imgElement.alt = `Image ${index + 1}`;
+                imgElement.addEventListener('click', () => openModal(index));
+                gallery.appendChild(imgElement);
+            });
+
+            function openModal(index) {
+                currentIndex = index;
+                modalImage.src = images[currentIndex];
+                modal.style.display = 'flex';
+            }
+
+            function closeModalFunc() {
+                modal.style.display = 'none';
+            }
+
+            closeModal.addEventListener('click', closeModalFunc);
+        });
+        const emojis = ["😅", "🤣😂", "💖", "🔥", "💔", "💫", "💚", "🤣", "🎯", "❤️‍🔥"];
+        const emojiContainer = document.getElementById('emoji-container');
+        
+        // Function to create and animate emojis
+        function createEmoji() {
+            const emojiElement = document.createElement('div');
+            emojiElement.classList.add('emoji');
+            emojiElement.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        
+            // Random horizontal position
+            emojiElement.style.left = Math.random() * 100 + 'vw';
+            
+            // Append to container
+            emojiContainer.appendChild(emojiElement);
+        
+            // Remove the emoji after animation completes
+            setTimeout(() => {
+                emojiElement.remove();
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+        console.log('Page Loaded!');
+    });
+
+    
+        
+        // Create multiple emojis on page load
+        for (let i = 0; i < 20; i++) {
+            setTimeout(createEmoji, i * 200); // Delay each emoji
+        }
+
+        // Function to set progress percentage
+function setProgress(percentage) {
+    const progressCircle = document.getElementById('progress-circle');
+    const progressPercentage = document.getElementById('progress-percentage');
+
+    const radius = progressCircle.r.baseVal.value;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    // Update the circle's stroke-dashoffset and percentage text
+    progressCircle.style.strokeDashoffset = offset;
+    progressPercentage.textContent = `${percentage}%`;
+}
+
+// Function to hide the progress bar
+function hideProgressBar() {
+    const progressContainer = document.getElementById('progress-container');
+    progressContainer.style.display = 'none';
+}
+
+// Function to track image loading
+function checkImagesLoaded() {
+    const images = document.querySelectorAll('img');
+    const totalImages = images.length;
+    let loadedImages = 0;
+
+    images.forEach((img) => {
+        if (img.complete) {
+            loadedImages++;
+        } else {
+            img.addEventListener('load', () => {
+                loadedImages++;
+                updateProgress(loadedImages, totalImages);
+            });
+            img.addEventListener('error', () => {
+                loadedImages++;
+                updateProgress(loadedImages, totalImages);
+            });
+        }
+    });
+
+    // Initial progress update
+    updateProgress(loadedImages, totalImages);
+}
+
+// Function to update the progress bar based on loaded images
+function updateProgress(loaded, total) {
+    const percentage = Math.floor((loaded / total) * 100);
+    setProgress(percentage);
+
+    if (loaded === total) {
+        // All images are loaded, hide the progress bar after a short delay
+        setTimeout(hideProgressBar, 500);
+    }
+}
+
+// Call the function to check images when the window loads
+window.addEventListener('load', checkImagesLoaded);
+
+
+    </script>
+</body>
+
+</html>
